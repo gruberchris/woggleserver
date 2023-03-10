@@ -71,7 +71,14 @@ func (s *Server) acceptConnections() {
 }
 
 func (s *Server) handleConnection(conn net.Conn) {
-	defer conn.Close()
+	defer func() {
+		s.clientsMu.Lock()
+		delete(s.clients, conn.RemoteAddr().String())
+		s.clientsMu.Unlock()
+
+		_ = conn.Close()
+		fmt.Printf("Connection from %s closed.\n", conn.RemoteAddr().String())
+	}()
 
 	buf := make([]byte, 2048)
 
@@ -79,7 +86,8 @@ func (s *Server) handleConnection(conn net.Conn) {
 		n, err := conn.Read(buf)
 
 		if err != nil {
-			fmt.Printf("Connection from %s closed.\n", conn.RemoteAddr().String())
+			// TODO: This is not a graceful way to exit the thread when the client disconnects
+			//fmt.Println("Error reading from connection: ", err.Error())
 			return
 		}
 
