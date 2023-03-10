@@ -80,7 +80,6 @@ func (s *Server) handleConnection(conn net.Conn) {
 
 		if err != nil {
 			fmt.Printf("Connection from %s closed.\n", conn.RemoteAddr().String())
-			//fmt.Println("Error reading from connection: ", err.Error())
 			return
 		}
 
@@ -89,9 +88,16 @@ func (s *Server) handleConnection(conn net.Conn) {
 			payload: buf[:n],
 		}
 
-		// TODO: Application logic here
+		// Reverse the message
+		reverseBuf := make([]byte, n+1)
 
-		conn.Write([]byte("Message received.\n"))
+		for i := 0; i < n; i++ {
+			reverseBuf[i] = buf[n-i-1]
+		}
+
+		reverseBuf[n] = '\n'
+
+		conn.Write(reverseBuf)
 	}
 }
 
